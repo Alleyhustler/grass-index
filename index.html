@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grass Index — Touch Grass. Not Charts.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #00ff41;
+    --green-dim: #00c832;
+    --green-glow: rgba(0,255,65,0.35);
+    --red: #ff3c3c;
+    --yellow: #ffe033;
+    --bg: #050a05;
+    --panel: rgba(0,20,5,0.85);
+    --border: rgba(0,255,65,0.18);
+    --text: #c8f7c5;
+    --muted: rgba(200,247,197,0.45);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* SCANLINE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.07) 2px,
+      rgba(0,0,0,0.07) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* BG IMAGE */
+  .bg-layer {
+    position: fixed;
+    inset: 0;
+    background: url('bg.png') center/cover no-repeat;
+    z-index: 0;
+    filter: saturate(0) contrast(1.4);
+  }
+
+  /* NOISE GRAIN */
+  .noise {
+    position: fixed;
+    inset: 0;
+    opacity: 0.03;
+    z-index: 1;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+
+  .container {
+    position: relative;
+    z-index: 10;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 0 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid var(--green);
+    object-fit: cover;
+    box-shadow: 0 0 16px var(--green-glow);
+  }
+
+  .logo-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.12em;
+    color: var(--green);
+    text-shadow: 0 0 18px var(--green-glow);
+  }
+
+  .logo-sub {
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: -4px;
+  }
+
+  .x-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 0.78rem;
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    letter-spacing: 0.08em;
+  }
+  .x-link:hover {
+    color: var(--green);
+    border-color: var(--green);
+    box-shadow: 0 0 12px var(--green-glow);
+  }
+  .x-icon { font-size: 1rem; }
+
+  /* ─── HERO ─── */
+  .hero {
+    text-align: center;
+    padding: 56px 0 32px;
+  }
+
+  .hero-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--green);
+    border: 1px solid var(--green);
+    padding: 4px 14px;
+    border-radius: 2px;
+    margin-bottom: 20px;
+    animation: pulse-border 2.4s infinite;
+  }
+
+  @keyframes pulse-border {
+    0%, 100% { box-shadow: 0 0 0 0 var(--green-glow); }
+    50% { box-shadow: 0 0 12px 4px var(--green-glow); }
+  }
+
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3.2rem, 8vw, 6rem);
+    line-height: 0.95;
+    color: var(--green);
+    text-shadow: 0 0 40px var(--green-glow), 0 0 80px rgba(0,255,65,0.15);
+    letter-spacing: 0.04em;
+    margin-bottom: 16px;
+  }
+
+  .hero-desc {
+    font-size: 0.85rem;
+    color: var(--muted);
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.7;
+    letter-spacing: 0.04em;
+  }
+
+  /* ─── MAIN COUNTER ─── */
+  .counter-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 40px;
+    text-align: center;
+    margin: 32px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .counter-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+    animation: scan-line 3s linear infinite;
+  }
+
+  @keyframes scan-line {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .counter-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .counter-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(4rem, 12vw, 8rem);
+    color: var(--green);
+    letter-spacing: 0.06em;
+    line-height: 1;
+    text-shadow: 0 0 30px var(--green-glow);
+    transition: color 0.3s;
+  }
+
+  .counter-display.danger {
+    color: var(--red);
+    text-shadow: 0 0 30px rgba(255,60,60,0.5);
+    animation: shake 0.3s infinite;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+  }
+
+  .counter-sub {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    margin-top: 8px;
+  }
+
+  .status-line {
+    margin-top: 20px;
+    font-size: 0.8rem;
+    color: var(--green-dim);
+    letter-spacing: 0.08em;
+    min-height: 22px;
+    transition: all 0.3s;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 28px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 12px 32px;
+    border-radius: 3px;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+  }
+
+  .btn-primary {
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .btn-primary:hover {
+    background: var(--green);
+    color: var(--bg);
+    box-shadow: 0 0 24px var(--green-glow);
+  }
+
+  .btn-danger {
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .btn-danger:hover {
+    background: var(--red);
+    color: white;
+    box-shadow: 0 0 24px rgba(255,60,60,0.4);
+  }
+
+  /* ─── LEVEL SYSTEM ─── */
+  .rank-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 0 0 28px;
+  }
+
+  @media (max-width: 600px) { .rank-section { grid-template-columns: 1fr; } }
+
+  .rank-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 24px;
+  }
+
+  .rank-card h3 {
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .rank-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--green);
+    letter-spacing: 0.08em;
+    text-shadow: 0 0 12px var(--green-glow);
+  }
+
+  .rank-progress {
+    margin-top: 12px;
+    height: 4px;
+    background: rgba(0,255,65,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .rank-bar {
+    height: 100%;
+    background: var(--green);
+    border-radius: 2px;
+    transition: width 1s linear;
+    box-shadow: 0 0 8px var(--green-glow);
+  }
+
+  .rank-next {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  .milestones {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+
+  .milestone-item {
+    font-size: 0.72rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    border-radius: 3px;
+    animation: fade-in 0.5s ease;
+  }
+
+  @keyframes fade-in { from { opacity: 0; transform: translateY(6px); } }
+
+  .milestone-item.earned {
+    background: rgba(0,255,65,0.08);
+    color: var(--green);
+    border: 1px solid rgba(0,255,65,0.2);
+  }
+
+  .milestone-item.locked {
+    color: var(--muted);
+    opacity: 0.5;
+  }
+
+  /* ─── WALLET SECTION ─── */
+  .wallet-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 36px;
+    margin-bottom: 28px;
+    position: relative;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    color: var(--green);
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+
+  .section-desc {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 24px;
+    line-height: 1.7;
+    letter-spacing: 0.04em;
+  }
+
+  .wallet-input-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .wallet-input {
+    flex: 1;
+    min-width: 200px;
+    background: rgba(0,255,65,0.04);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .wallet-input:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 12px var(--green-glow);
+  }
+
+  .wallet-input::placeholder { color: var(--muted); }
+
+  /* ─── AI LOADER ─── */
+  #ai-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,5,0,0.97);
+    z-index: 500;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px;
+  }
+
+  #ai-overlay.active { display: flex; }
+
+  .ai-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    color: var(--green);
+    letter-spacing: 0.3em;
+    margin-bottom: 40px;
+    opacity: 0.7;
+  }
+
+  .ai-spinner {
+    width: 64px;
+    height: 64px;
+    border: 2px solid rgba(0,255,65,0.15);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 32px;
+    box-shadow: 0 0 24px var(--green-glow);
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .ai-status {
+    font-size: 0.8rem;
+    color: var(--green);
+    letter-spacing: 0.15em;
+    min-height: 20px;
+    margin-bottom: 16px;
+  }
+
+  .ai-log {
+    font-size: 0.68rem;
+    color: var(--muted);
+    max-width: 480px;
+    text-align: left;
+    height: 180px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    border-radius: 4px;
+    background: rgba(0,255,65,0.03);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .log-line {
+    opacity: 0;
+    animation: log-appear 0.3s forwards;
+  }
+
+  @keyframes log-appear { to { opacity: 1; } }
+
+  .ai-progress-bar {
+    width: 320px;
+    max-width: 90vw;
+    height: 3px;
+    background: rgba(0,255,65,0.1);
+    border-radius: 2px;
+    margin-top: 24px;
+    overflow: hidden;
+  }
+
+  .ai-progress-fill {
+    height: 100%;
+    background: var(--green);
+    width: 0%;
+    transition: width 0.5s linear;
+    box-shadow: 0 0 8px var(--green-glow);
+  }
+
+  .ai-pct {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--green);
+    margin-top: 12px;
+    text-shadow: 0 0 16px var(--green-glow);
+  }
+
+  /* ─── RESULT MODAL ─── */
+  #result-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,5,0,0.96);
+    z-index: 600;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  #result-modal.active { display: flex; }
+
+  .result-card {
+    background: rgba(0,20,5,0.98);
+    border: 1px solid var(--green);
+    border-radius: 8px;
+    padding: 48px 40px;
+    max-width: 560px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 0 60px var(--green-glow);
+    position: relative;
+    animation: result-in 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  @keyframes result-in {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .result-badge {
+    display: inline-block;
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    border: 1px solid var(--green);
+    padding: 4px 14px;
+    border-radius: 2px;
+    color: var(--green);
+    margin-bottom: 24px;
+  }
+
+  .result-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 5rem;
+    color: var(--green);
+    text-shadow: 0 0 30px var(--green-glow);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .result-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .result-verdict {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: var(--yellow);
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+    text-shadow: 0 0 16px rgba(255,224,51,0.4);
+  }
+
+  .result-text {
+    font-size: 0.78rem;
+    color: var(--text);
+    line-height: 1.8;
+    margin-bottom: 28px;
+    letter-spacing: 0.03em;
+  }
+
+  .result-disclaimer {
+    font-size: 0.62rem;
+    color: var(--muted);
+    opacity: 0.5;
+    margin-top: 12px;
+    line-height: 1.6;
+  }
+
+  /* ─── FAIL FLASH ─── */
+  .fail-flash {
+    position: fixed;
+    inset: 0;
+    background: rgba(255,0,0,0.15);
+    z-index: 800;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+  .fail-flash.active { opacity: 1; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 0;
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-top: 16px;
+  }
+
+  /* ─── TICKER ─── */
+  .ticker-bar {
+    background: rgba(0,255,65,0.04);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 0;
+    overflow: hidden;
+    margin-bottom: 32px;
+    white-space: nowrap;
+  }
+
+  .ticker-inner {
+    display: inline-block;
+    animation: ticker 22s linear infinite;
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  /* highlight row */
+  .streak-display {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  .streak-pill {
+    font-size: 0.68rem;
+    border: 1px solid var(--border);
+    padding: 4px 14px;
+    border-radius: 20px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+  .streak-pill span { color: var(--green); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="bg-layer"></div>
+<div class="noise"></div>
+<div class="fail-flash" id="fail-flash"></div>
+
+<!-- ─── AI OVERLAY ─── -->
+<div id="ai-overlay">
+  <div class="ai-logo">◈ GRASS INDEX AI ◈</div>
+  <div class="ai-spinner"></div>
+  <div class="ai-status" id="ai-status">INITIALIZING BEHAVIORAL ANALYSIS...</div>
+  <div class="ai-log" id="ai-log"></div>
+  <div class="ai-progress-bar"><div class="ai-progress-fill" id="ai-fill"></div></div>
+  <div class="ai-pct" id="ai-pct">0%</div>
+</div>
+
+<!-- ─── RESULT MODAL ─── -->
+<div id="result-modal">
+  <div class="result-card">
+    <div class="result-badge">◈ GRASS INDEX AI REPORT ◈</div>
+    <div class="result-score" id="r-score">74</div>
+    <div class="result-label">GRASS SCORE™</div>
+    <div class="result-verdict" id="r-verdict">CHRONICALLY ONLINE</div>
+    <div class="result-text" id="r-text">loading...</div>
+    <button class="btn btn-primary" onclick="closeResult()">ACCEPT MY FATE</button>
+    <div class="result-disclaimer">
+      * This analysis was performed by a highly advanced AI that definitely exists.<br>
+      Results are binding in 0 jurisdictions. No financial advice. Touch grass.
+    </div>
+  </div>
+</div>
+
+<!-- ─── MAIN CONTENT ─── -->
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo-area">
+      <img src="logo.png" alt="Grass Index Logo" class="logo-img" onerror="this.style.display='none'">
+      <div>
+        <div class="logo-text">Grass Index</div>
+        <div class="logo-sub">GRASSPOINT PROTOCOL v0.1</div>
+      </div>
+    </div>
+    <a href="https://twitter.com/GrassIndex" target="_blank" class="x-link">
+      <span class="x-icon">𝕏</span> Follow the Protocol
+    </a>
+  </header>
+
+  <!-- TICKER -->
+  <div class="ticker-bar">
+    <div class="ticker-inner" id="ticker-inner"></div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">⬤ LIVE SESSION ACTIVE</div>
+    <h1>TOUCH GRASS.<br>NOT CHARTS.</h1>
+    <p class="hero-desc">
+      The only index that measures your actual health.<br>
+      Can you resist? No. But we track it anyway.
+    </p>
+  </div>
+
+  <!-- ─── COUNTER ─── -->
+  <div class="counter-section">
+    <div class="counter-label">YOU HAVE NOT CHECKED A CHART IN</div>
+    <div class="counter-display" id="counter">00:00:00</div>
+    <div class="counter-sub">HH : MM : SS</div>
+    <div class="status-line" id="status-line">Press START to begin your suffering.</div>
+    <div class="streak-display">
+      <div class="streak-pill">BEST STREAK: <span id="best-streak">00:00:00</span></div>
+      <div class="streak-pill">TOTAL RELAPSES: <span id="relapse-count">0</span></div>
+      <div class="streak-pill">GRASS SCORE™: <span id="live-score">0</span></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="main-btn" onclick="toggleSession()">START SESSION</button>
+      <button class="btn btn-danger" onclick="relapse()">I CHECKED THE CHART 📉</button>
+    </div>
+  </div>
+
+  <!-- ─── RANK + MILESTONES ─── -->
+  <div class="rank-section">
+    <div class="rank-card">
+      <h3>Current Rank</h3>
+      <div class="rank-name" id="rank-name">CHART ADDICT</div>
+      <div class="rank-progress"><div class="rank-bar" id="rank-bar" style="width:2%"></div></div>
+      <div class="rank-next" id="rank-next">Next: NORMIE (needs 2 min)</div>
+    </div>
+    <div class="rank-card">
+      <h3>Milestones Unlocked</h3>
+      <div class="milestones" id="milestones">
+        <div class="milestone-item locked">🔒 2 min — NORMIE STATUS</div>
+        <div class="milestone-item locked">🔒 5 min — ACTUAL HUMAN</div>
+        <div class="milestone-item locked">🔒 10 min — GRASS TOUCHER</div>
+        <div class="milestone-item locked">🔒 30 min — TOUCHED GRASS IRL</div>
+        <div class="milestone-item locked">🔒 1 hr — CERTIFIED NPC</div>
+        <div class="milestone-item locked">🔒 24 hr — LEGEND (unconfirmed)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── WALLET SECTION ─── -->
+  <div class="wallet-section">
+    <div class="section-title">⬡ Behavioral Analysis</div>
+    <div class="section-desc">
+      Connect your Solana wallet or paste your address for a deep AI-powered analysis of your on-chain degenerate behavior. 
+      Our proprietary Grass Score™ algorithm cross-references 47 behavioral vectors to determine how close you are to touching actual grass.
+    </div>
+    <div class="wallet-input-row">
+      <input
+        class="wallet-input"
+        id="wallet-input"
+        type="text"
+        placeholder="Solana wallet address (e.g. 7xKp...Qm3r)"
+        maxlength="88"
+      />
+      <button class="btn btn-primary" onclick="startAnalysis()">ANALYZE ME</button>
+    </div>
+    <div style="margin-top:12px; font-size:0.65rem; color:var(--muted); letter-spacing:0.06em;">
+      ◈ Read-only verification only. We see your shame, not your keys.
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    GRASS INDEX © 2024 — NOT FINANCIAL ADVICE — TOUCH GRASS — 
+    <a href="https://twitter.com/GrassIndex" target="_blank" style="color:var(--green-dim); text-decoration:none;">𝕏 @GrassIndex</a>
+    &nbsp;|&nbsp; Built on irony and copium
+  </footer>
+</div>
+
+<script>
+// ─── STATE ───
+let running = false;
+let seconds = 0;
+let bestSeconds = 0;
+let relapses = 0;
+let sessionInterval = null;
+let milestoneLog = [];
+
+// ─── RANKS ───
+const ranks = [
+  { s:0,    name:"CHART ADDICT",   next:"NORMIE (2 min)" },
+  { s:120,  name:"NORMIE",         next:"ACTUAL HUMAN (5 min)" },
+  { s:300,  name:"ACTUAL HUMAN",   next:"GRASS TOUCHER (10 min)" },
+  { s:600,  name:"GRASS TOUCHER",  next:"TOUCHED GRASS IRL (30 min)" },
+  { s:1800, name:"TOUCHED GRASS",  next:"CERTIFIED NPC (1 hr)" },
+  { s:3600, name:"CERTIFIED NPC",  next:"LEGEND (24 hr)" },
+  { s:86400,name:"LEGEND",         next:"YOU WIN THE INTERNET" },
+];
+
+const milestoneData = [
+  { s:120,   icon:"🌱", text:"2 min — NORMIE STATUS" },
+  { s:300,   icon:"🧍", text:"5 min — ACTUAL HUMAN" },
+  { s:600,   icon:"🌿", text:"10 min — GRASS TOUCHER" },
+  { s:1800,  icon:"🏕️", text:"30 min — TOUCHED GRASS IRL" },
+  { s:3600,  icon:"🧠", text:"1 hr — CERTIFIED NPC" },
+  { s:86400, icon:"🏆", text:"24 hr — LEGEND (unconfirmed)" },
+];
+
+// ─── TICKER CONTENT ───
+const tickerItems = [
+  "GRASS INDEX: 69.420 ▲ +4.20%",
+  "CHART RELAPSES TODAY: 1,247,391",
+  "AVERAGE SURVIVAL: 2m 47s",
+  "LONGEST STREAK EVER: 14m 3s (disputed)",
+  "USERS CLAIMING TO TOUCH GRASS: 0",
+  "BTC DOMINANCE: irrelevant",
+  "GRASS DOMINANCE: 100%",
+  "ESTIMATED COPIUM IN MARKET: ♾",
+  "WARNING: LOOKING AT THIS SITE IS TECHNICALLY CHECKING SOMETHING",
+  "DISCLAIMER: GRASS IS NOT A FINANCIAL INSTRUMENT... YET",
+];
+
+function buildTicker() {
+  const full = [...tickerItems, ...tickerItems].map(t => `&nbsp;&nbsp;&nbsp;◈&nbsp;&nbsp;&nbsp;${t}`).join('');
+  document.getElementById('ticker-inner').innerHTML = full;
+}
+buildTicker();
+
+// ─── TIMER HELPERS ───
+function fmtTime(s) {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return [h, m, sec].map(x => String(x).padStart(2, '0')).join(':');
+}
+
+function getGrassScore(s) {
+  return Math.min(100, Math.floor(Math.log1p(s) * 8.2));
+}
+
+function getRank(s) {
+  let rank = ranks[0];
+  for (const r of ranks) { if (s >= r.s) rank = r; else break; }
+  return rank;
+}
+
+function getRankProgress(s) {
+  const rankIdx = ranks.findIndex(r => s < r.s);
+  if (rankIdx <= 0) return 2;
+  const prev = ranks[rankIdx - 1];
+  const next = ranks[rankIdx];
+  return Math.min(99, Math.floor(((s - prev.s) / (next.s - prev.s)) * 100));
+}
+
+function updateUI() {
+  const disp = document.getElementById('counter');
+  const score = getGrassScore(seconds);
+  disp.textContent = fmtTime(seconds);
+  disp.className = 'counter-display' + (seconds < 30 && running ? ' danger' : '');
+
+  document.getElementById('live-score').textContent = score;
+
+  const rank = getRank(seconds);
+  document.getElementById('rank-name').textContent = rank.name;
+  document.getElementById('rank-next').textContent = `Next: ${rank.next}`;
+  document.getElementById('rank-bar').style.width = getRankProgress(seconds) + '%';
+
+  // milestones
+  const mList = document.getElementById('milestones');
+  mList.innerHTML = '';
+  milestoneData.forEach(m => {
+    const earned = seconds >= m.s;
+    const div = document.createElement('div');
+    div.className = 'milestone-item ' + (earned ? 'earned' : 'locked');
+    div.textContent = (earned ? m.icon : '🔒') + ' ' + m.text;
+    mList.appendChild(div);
+  });
+
+  // status messages
+  const statuses = [
+    [0,   "Waiting for your inevitable relapse..."],
+    [30,  "30 seconds. Proud of you. (barely)"],
+    [60,  "A whole minute. Your portfolio still exists."],
+    [120, "NORMIE STATUS UNLOCKED. Wild."],
+    [300, "5 minutes. You might be human after all."],
+    [600, "10 MINUTES. Call the Guinness people."],
+    [1800,"Half an hour. Grass has been officially touched."],
+    [3600,"ONE HOUR. This has to be a glitch."],
+  ];
+  let statusMsg = "Waiting for your inevitable relapse...";
+  for (const [t, msg] of statuses) { if (seconds >= t) statusMsg = msg; }
+  document.getElementById('status-line').textContent = statusMsg;
+
+  if (seconds > bestSeconds) {
+    bestSeconds = seconds;
+    document.getElementById('best-streak').textContent = fmtTime(bestSeconds);
+  }
+}
+
+// ─── SESSION CONTROLS ───
+function toggleSession() {
+  if (!running) {
+    running = true;
+    document.getElementById('main-btn').textContent = 'PAUSE';
+    sessionInterval = setInterval(() => { seconds++; updateUI(); }, 1000);
+  } else {
+    running = false;
+    clearInterval(sessionInterval);
+    document.getElementById('main-btn').textContent = 'RESUME';
+  }
+}
+
+function relapse() {
+  if (!running && seconds === 0) return;
+  clearInterval(sessionInterval);
+  running = false;
+  relapses++;
+  document.getElementById('relapse-count').textContent = relapses;
+  document.getElementById('main-btn').textContent = 'TRY AGAIN';
+
+  // flash
+  const flash = document.getElementById('fail-flash');
+  flash.classList.add('active');
+  setTimeout(() => flash.classList.remove('active'), 400);
+
+  const roasts = [
+    `Lasted ${fmtTime(seconds)}. A new low.`,
+    `${fmtTime(seconds)} seconds. Literally worse than yesterday.`,
+    `${fmtTime(seconds)} and you crumbled. The chart didn't even move.`,
+    `Relapse #${relapses}. The chart: unchanged. You: destroyed.`,
+    `${fmtTime(seconds)}. Your portfolio is more stable than your willpower.`,
+    `Ah yes, checking the chart at ${fmtTime(seconds)}. Classic.`,
+  ];
+  document.getElementById('status-line').textContent = roasts[Math.floor(Math.random() * roasts.length)];
+  seconds = 0;
+  updateUI();
+  document.getElementById('counter').className = 'counter-display';
+}
+
+// ─── AI ANALYSIS ───
+const aiLogs = [
+  "> Connecting to GRASSNET distributed nodes...",
+  "> Wallet fingerprint loaded. Shame levels: CRITICAL",
+  "> Cross-referencing 47 behavioral vectors...",
+  "> Analyzing on-chain copium transactions...",
+  "> Scanning for 'just one more candle' patterns...",
+  "> Detecting portfolio-checking frequency...",
+  "> Running Hopium Regression Analysis™...",
+  "> Cross-checking Telegram group activity...",
+  "> Measuring distance from nearest grass...",
+  "> Calculating NGMI coefficient...",
+  "> Running Monte Carlo simulation of your bags...",
+  "> Neural net initialized: DEGENERACY_MODEL_v7.3",
+  "> Behavioral entropy: HIGH",
+  "> Aggregating Grass Score™ components...",
+  "> Compiling final verdict... please stand by",
+];
+
+const aiStatuses = [
+  "INITIALIZING BEHAVIORAL ANALYSIS...",
+  "SCANNING ON-CHAIN DEGENERACY...",
+  "RUNNING HOPIUM REGRESSION™...",
+  "CALCULATING GRASS PROXIMITY...",
+  "GENERATING FINAL VERDICT...",
+  "REPORT READY.",
+];
+
+const results = [
+  {
+    score: 12,
+    verdict: "TERMINALLY ONLINE",
+    text: "Our AI has detected 847 chart checks in the last 72 hours. Your closest encounter with grass was a plant emoji in a Discord message. The algorithm recommends immediate outdoor exposure, a phone detox, and possibly a therapist who accepts SOL. Your portfolio, however, is not the problem. You are."
+  },
+  {
+    score: 31,
+    verdict: "CHRONICALLY ONLINE",
+    text: "You checked the chart 6 times while filling out this form. Our sensors detected elevated cortisol levels every time BTC moved 0.3%. The good news: you have touched a plant before. The bad news: it was a screenshot of someone else's succulent. You are 83% degen."
+  },
+  {
+    score: 47,
+    verdict: "HOPIUM ENJOYER",
+    text: "Analysis complete. You exist in a quantum state: simultaneously 'done with crypto' and refreshing Coingecko every 4 minutes. Our model predicts you will check a chart within 11 minutes of leaving this site. You once walked past a park. You did not enter it."
+  },
+  {
+    score: 69,
+    verdict: "SEMI-FUNCTIONAL HUMAN",
+    text: "Surprising result. You have, on at least one documented occasion, gone more than 2 hours without opening a chart. This anomaly may have been caused by sleep. Your grass score is above average, which in this community means you've been outside in the last calendar month. Consider this a win."
+  },
+  {
+    score: 88,
+    verdict: "ALMOST NORMAL",
+    text: "Remarkable. Our AI struggled to classify you. You check charts, yes, but with the casual detachment of someone who has accepted their fate. You own plants. Real ones. You've been to a park this month. You still refresh Coingecko at 3am, but you feel bad about it. That's growth."
+  },
+];
+
+function startAnalysis() {
+  const wallet = document.getElementById('wallet-input').value.trim();
+  if (!wallet) {
+    document.getElementById('wallet-input').style.borderColor = 'var(--red)';
+    setTimeout(() => document.getElementById('wallet-input').style.borderColor = '', 1200);
+    return;
+  }
+
+  document.getElementById('ai-overlay').classList.add('active');
+  runAILoader();
+}
+
+function runAILoader() {
+  const logEl = document.getElementById('ai-log');
+  const fillEl = document.getElementById('ai-fill');
+  const pctEl = document.getElementById('ai-pct');
+  const statusEl = document.getElementById('ai-status');
+
+  logEl.innerHTML = '';
+  let logIdx = 0;
+  let pct = 0;
+  let statusIdx = 0;
+
+  const totalMs = 18000; // ~18 second demo (shortened from 2min for UX, can extend)
+  const logInterval = Math.floor(totalMs / aiLogs.length);
+  const statusInterval = Math.floor(totalMs / aiStatuses.length);
+
+  // progress bar
+  const pctStep = 100 / (totalMs / 300);
+  const pctTimer = setInterval(() => {
+    pct = Math.min(100, pct + pctStep + (Math.random() * 0.5));
+    fillEl.style.width = pct + '%';
+    pctEl.textContent = Math.floor(pct) + '%';
+    if (pct >= 100) {
+      clearInterval(pctTimer);
+      setTimeout(showResult, 800);
+    }
+  }, 300);
+
+  // log lines
+  const logTimer = setInterval(() => {
+    if (logIdx >= aiLogs.length) { clearInterval(logTimer); return; }
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    line.textContent = aiLogs[logIdx++];
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
+  }, logInterval);
+
+  // status messages
+  const statusTimer = setInterval(() => {
+    if (statusIdx >= aiStatuses.length) { clearInterval(statusTimer); return; }
+    statusEl.textContent = aiStatuses[statusIdx++];
+  }, statusInterval);
+}
+
+function showResult() {
+  document.getElementById('ai-overlay').classList.remove('active');
+  const r = results[Math.floor(Math.random() * results.length)];
+
+  // adjust result based on actual session
+  const adjustedScore = Math.max(5, Math.min(99, r.score + getGrassScore(bestSeconds) / 2));
+  document.getElementById('r-score').textContent = Math.floor(adjustedScore);
+  document.getElementById('r-verdict').textContent = r.verdict;
+  document.getElementById('r-text').textContent = r.text;
+  document.getElementById('result-modal').classList.add('active');
+}
+
+function closeResult() {
+  document.getElementById('result-modal').classList.remove('active');
+}
+
+// ─── INIT ───
+updateUI();
+</script>
+</body>
+</html>
